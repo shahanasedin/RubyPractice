@@ -24,10 +24,10 @@ class GroceryStore
 
     def denominations
         p "Cash register original #{@cash_register}"
-        p "Total amount is #{total_amt}"
+        p "Total amount is #{total_amt}#{ }"
         p "Enter the total amount to be paid by the customer"
         bill = gets.chomp.to_i
-        p "Enter the amount paid by customer(comma-separated)"
+        p "Enter the amount paid by customer(comma-separated)#{ }"
         amount_paid = gets.chomp
         amount_paid = amount_paid.split(",")
         user_denomination = Hash.new(0)
@@ -38,16 +38,19 @@ class GroceryStore
                 user_denomination[amt.to_i] += 1
                 user_total += amt.to_i
             else
-                return if p "Invalid notes given, Please check your currency"
+                return if p "Invalid notes given, Please check your currency "
             end
         end
 
-        return p "You have paid #{bill - user_total} less than the original cost. Transaction failed" if bill > user_total
+        p "The customer has paid #{user_total} rs in cash "
+
+        return p "You have paid #{bill - user_total} less than the original cost. Transaction failed " if bill > user_total
         
         change_due = user_total - bill
-        return p "Sorry, the cash register has insufficient amount to give your change.Please pay with appropriate change" if total_amt < change_due
+        change_to_be_provided = change_due
+        return p "Sorry, the cash register has insufficient amount to give your change.Please pay with appropriate change " if total_amt < change_due
 
-        return p "User has provided the correct amount, No change needed" if change_due == 0
+        return p "User has provided the correct amount, No change needed " if change_due == 0
 
         change_denominations = Hash.new(0)
         @cash_register_original = @cash_register.dup
@@ -67,18 +70,17 @@ class GroceryStore
         end
 
         if change_due == 0
-            p "Change is provided successfully with the following denominations #{change_denominations}"
-            p "Current cash register #{@cash_register}"
+            p "Change of #{change_to_be_provided} is provided successfully with the following denominations #{change_denominations}"
             user_denomination.each do |amt, count|
                 @cash_register[amt] += count
             end
-            p "Current total : #{total_amt}"
+            p "Current cash register #{@cash_register}"
+            p "Current total : #{total_amt} "
 
         else
             @cash_register = @cash_register_original
             p "Sorry we have a deficit of #{change_due} rs to give your change.Please pay with correct change the next time"
-            p "Cash register updated to original #{@cash_register}"
-            return
+            p "Updated Cash register #{@cash_register} "
         end
     end
 end
