@@ -8,11 +8,11 @@ class SpellChecker
         uri = URI("#{BASE_URL}/words?sp=#{word}")
         response = Net::HTTP.get_response(uri)
         if response.is_a?(Net::HTTPSuccess)
-        words = JSON.parse(response.body)
-        !words.empty?
+            words = JSON.parse(response.body)
+            !words.empty?
         else
-        puts "Error contacting spell checker API."
-        false
+            puts "Error contacting spell checker API."
+            false
         end
     end
 end
