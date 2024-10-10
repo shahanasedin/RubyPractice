@@ -3,7 +3,6 @@ require 'json'
 
 class SpellChecker
     BASE_URL = "https://api.datamuse.com"
-
     def valid_word?(word)
         uri = URI("#{BASE_URL}/words?sp=#{word}")
         response = Net::HTTP.get_response(uri)
@@ -17,22 +16,14 @@ class SpellChecker
     end
 end
 
-def start
-        loop do
-            play_round
-            puts "Do you want to play again? (yes/no)"
-            replay_input = gets.chomp.downcase
-            break unless replay_input == "yes"
-        end
-        puts "Thanks for playing! Goodbye!"
-    end
 
 class Game
     GREEN = "\e[32m"  
     YELLOW = "\e[33m" 
     RED = "\e[31m"
     BLUE = "\e[34m"    
-    RESET = "\e[0m"   
+    RESET = "\e[0m"
+
     def initialize
         @words = File.readlines('D:\ruby\Wordle\words.txt').map(&:strip)
         @spell_checker = SpellChecker.new 
@@ -70,7 +61,6 @@ class Game
     def display_rules
         rules = <<-RULES
         Wordle Game Rules:
-        
         1. You have 6 attempts to guess the correct 5-letter word.
         2. After each guess, the letters in your guess will be colored:
            - #{GREEN}Green#{RESET}: Correct letter in the correct position.
@@ -85,6 +75,7 @@ class Game
     def guess
         until @turns == 0
             user_word = gets.chomp
+            
             if user_word.length != 5
                 puts "\n#{user_word} is not a five-letter word. Please try again."
                 next
@@ -97,7 +88,6 @@ class Game
 
             process_guess(user_word)
 
-            
             update_best_green(user_word) 
             puts "\n#{GREEN}Your best guess so far: #{display(@best_green)} #{RESET}"
             puts "#{GREEN}Correct letters in the correct position: #{display(@green)}#{RESET}"
@@ -114,7 +104,7 @@ class Game
             if @turns > 0
                 puts "\nYou have #{@turns} more chances to guess the word. \nPlease enter a five-letter word:"
             else
-                puts "\nYou lose. The correct word was #{BLUE}#{@target}.#{RESET}"
+                puts "\nYou lose. The correct answer is #{BLUE}#{@target}.#{RESET}"
             end
         end
     end
@@ -124,18 +114,17 @@ class Game
         current_yellow_letters = []
 
         user_word.chars.each_with_index do |letter, index|
-        if @target[index] == letter
-            @green[index] = letter 
-            @yellow.delete(letter) if @yellow.include?(letter)
-        elsif @target.include?(letter)
-            required_count = @target.count(letter) - @green.count(letter)
-            current_count = current_yellow_letters.count(letter)
-            current_yellow_letters << letter if current_count < required_count
-        else
-            @red << letter unless @red.include?(letter)
+            if @target[index] == letter
+                @green[index] = letter 
+                @yellow.delete(letter) if @yellow.include?(letter)
+            elsif @target.include?(letter)
+                required_count = @target.count(letter) - @green.count(letter)
+                current_count = current_yellow_letters.count(letter)
+                current_yellow_letters << letter if current_count < required_count
+            else
+                @red << letter unless @red.include?(letter)
+            end
         end
-        end
-
         @yellow.concat(current_yellow_letters).uniq!
     end
 
@@ -144,7 +133,7 @@ class Game
         best_green_count = @best_green.compact.length
 
         if current_green_count > best_green_count
-        @best_green = @green.dup 
+            @best_green = @green.dup 
         end
     end
 
