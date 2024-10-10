@@ -34,23 +34,37 @@ class Game
     BLUE = "\e[34m"    
     RESET = "\e[0m"   
     def initialize
+        @words = File.readlines('D:\ruby\Wordle\words.txt').map(&:strip)
+        @spell_checker = SpellChecker.new 
+    end
+
+    def new_game_state
         @turns = 6
         @green = [nil] * 5 # Current correct letters at correct position
-        @best_green = [nil] * 5 # Best correct letters at correct position
+        @best_green = [nil] * 5 # Overall Best Guess
         @yellow = [] # Correct letters but in the wrong position
         @red = [] # Wrong letters
-        words = File.readlines('D:\ruby\Wordle\words.txt').map(&:strip)
-        @target = words.sample
-        @spell_checker = SpellChecker.new 
+        @target = @words.sample
     end
     
     def start
         display_rules
         puts "\nWelcome to the Wordle game! What's your name?"
-        user_name = gets.chomp
-        puts "Hi #{user_name}! You have #{@turns} chances to guess the word."
-        puts "\nPlease enter a five-letter word:"
-        guess
+        @user_name = gets.chomp
+        puts "Hi #{@user_name}! Lets start the game!!"
+
+        loop do
+            new_game_state
+            puts "You have #{@turns} chances to guess the word."
+            puts "\nPlease enter a five-letter word:"
+            guess
+            puts "Do you want to play the game again? (yes / no)"
+            choice = gets.chomp.strip.downcase
+            if choice == "no"
+                puts "Thanks for playing! Bye , Have a good day"
+                break
+            end
+        end
     end
 
     def display_rules
@@ -70,38 +84,38 @@ class Game
 
     def guess
         until @turns == 0
-        user_word = gets.chomp
-        if user_word.length != 5
-            puts "\n#{user_word} is not a five-letter word. Please try again."
-            next
-        end
+            user_word = gets.chomp
+            if user_word.length != 5
+                puts "\n#{user_word} is not a five-letter word. Please try again."
+                next
+            end
 
-        unless @spell_checker.valid_word?(user_word)
-            puts "\nThis is not a valid word. Please try again."
-            next
-        end  
+            unless @spell_checker.valid_word?(user_word)
+                puts "\nThis is not a valid word. Please try again."
+                next
+            end  
 
-        process_guess(user_word)
+            process_guess(user_word)
 
-        
-        update_best_green(user_word) 
-        puts "\n#{GREEN}Your best guess so far: #{display(@best_green)} #{RESET}"
-        puts "#{GREEN}Correct letters in the correct position: #{display(@green)}#{RESET}"
+            
+            update_best_green(user_word) 
+            puts "\n#{GREEN}Your best guess so far: #{display(@best_green)} #{RESET}"
+            puts "#{GREEN}Correct letters in the correct position: #{display(@green)}#{RESET}"
 
-        if @green.compact.length == 5
-            puts "\nCongratulations! You win! You guessed #{BLUE}#{@target}#{RESET}"
-            return
-        end
+            if @green.compact.length == 5
+                puts "\nCongratulations! You win! You guessed #{BLUE}#{@target}#{RESET}"
+                return
+            end
 
-        puts "\n#{YELLOW}Correct letters but in the wrong position: #{@yellow.uniq.join(", ")}#{RESET}"
-        puts "\n#{RED}Letters not in the word: #{@red.uniq.join(", ")}#{RESET}"
+            puts "\n#{YELLOW}Correct letters but in the wrong position: #{@yellow.uniq.join(", ")}#{RESET}"
+            puts "\n#{RED}Letters not in the word: #{@red.uniq.join(", ")}#{RESET}"
 
-        @turns -= 1
-        if @turns > 0
-            puts "\nYou have #{@turns} more chances to guess the word. \nPlease enter a five-letter word:"
-        else
-            puts "\nYou lose. The correct word was #{BLUE}#{@target}.#{RESET}"
-        end
+            @turns -= 1
+            if @turns > 0
+                puts "\nYou have #{@turns} more chances to guess the word. \nPlease enter a five-letter word:"
+            else
+                puts "\nYou lose. The correct word was #{BLUE}#{@target}.#{RESET}"
+            end
         end
     end
 
