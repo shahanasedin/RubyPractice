@@ -83,6 +83,13 @@ class Game
             puts "\n#{RED}Letters not in the word: #{@red.uniq.join(", ")}#{RESET}"
 
             @turns -= 1
+
+            if @turns == 3
+                puts "\nYou have only three turns left. Do you want a hint (yes/no)?"
+                choice = gets.chomp.strip.downcase
+                get_word_definition(@target) if choice == "yes"
+            end
+
             if @turns > 0
                 puts "\nYou have #{@turns} more chances to guess the word. \nPlease enter a five-letter word:"
             else
@@ -139,6 +146,23 @@ class Game
 
     def display(green)
         green.map { |ch| ch.nil? ? "_" : ch }.join(" ")
+    end
+
+    def get_word_definition(word)
+        response = HTTParty.get("https://api.dictionaryapi.dev/api/v2/entries/en/#{word}")
+        
+        if response.success?
+            definitions = response.parsed_response
+            if definitions.is_a?(Array) && definitions.any?
+                word_info = definitions.sample
+                first_definition = word_info['meanings'].first['definitions'].first['definition']
+                puts "#{BLUE}#{first_definition}#{RESET}"
+            else
+                puts "No definitions found for '#{word}'."
+            end
+        else
+            puts "Error fetching definitions: #{response.code}."
+        end
     end
 end
 
