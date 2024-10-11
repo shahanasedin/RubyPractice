@@ -1,21 +1,4 @@
-require 'net/http'
-require 'json'
-
-class SpellChecker
-    BASE_URL = "https://api.datamuse.com"
-    def valid_word?(word)
-        uri = URI("#{BASE_URL}/words?sp=#{word}")
-        response = Net::HTTP.get_response(uri)
-        if response.is_a?(Net::HTTPSuccess)
-            words = JSON.parse(response.body)
-            !words.empty?
-        else
-            puts "Error contacting spell checker API."
-            false
-        end
-    end
-end
-
+require 'httparty'
 
 class Game
     GREEN = "\e[32m"  
@@ -26,7 +9,6 @@ class Game
 
     def initialize
         @words = File.readlines('D:\ruby\Wordle\words.txt').map(&:strip)
-        @spell_checker = SpellChecker.new 
     end
 
     def new_game_state
@@ -81,7 +63,7 @@ class Game
                 next
             end
 
-            unless @spell_checker.valid_word?(user_word)
+            if check_spelling(user_word)
                 puts "\nThis is not a valid word. Please try again."
                 next
             end  
@@ -136,6 +118,24 @@ class Game
             @best_green = @green.dup 
         end
     end
+
+    def check_spelling(word)
+        response = HTTParty.post("https://api.languagetoolplus.com/v2/check", {
+          body: {
+            text: word,
+            language: "en-US"
+          },
+          headers: { 'Content-Type' => 'application/x-www-form-urlencoded' }
+        })
+    
+        if response.success?
+            matches = response.parsed_response["matches"]
+            result = (matches.empty?) ? false : true
+        else
+            puts "Error: #{response.code}"
+            return false
+        end
+    end    
 
     def display(green)
         green.map { |ch| ch.nil? ? "_" : ch }.join(" ")
