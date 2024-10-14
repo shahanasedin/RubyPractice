@@ -4,11 +4,14 @@ class Game
     GREEN = "\e[32m"  
     YELLOW = "\e[33m" 
     RED = "\e[31m"
-    BLUE = "\e[34m"    
+    BLUE = "\e[34m"
+    MAGENTA = "\e[95m"  
+    BOLD = "\e[1m"  
     RESET = "\e[0m"
 
     def initialize
         @words = File.readlines('D:\ruby\Wordle\words.txt').map(&:strip)
+        @hint_needed = true
     end
 
     def new_game_state
@@ -24,33 +27,34 @@ class Game
         display_rules
         puts "\nWelcome to the Wordle game! What's your name?"
         @user_name = gets.chomp
-        puts "Hi #{@user_name}! Lets start the game!!"
+        puts "\nHi #{MAGENTA}#{@user_name}#{RESET}! Lets start the game!!"
 
         loop do
             new_game_state
             puts "You have #{@turns} chances to guess the word."
             puts "\nPlease enter a five-letter word:"
             guess
-            puts "Do you want to play the game again? (yes / no)"
+            puts "\nDo you want to play the game again? (yes / no)"
             choice = gets.chomp.strip.downcase
             if choice == "no"
-                puts "Thanks for playing! Bye , Have a good day"
+                puts "#{BLUE}Thanks for playing! Bye , Have a good day#{RESET}"
                 break
             end
         end
     end
 
     def display_rules
-        rules = <<-RULES
-        Wordle Game Rules:
-        1. You have 6 attempts to guess the correct 5-letter word.
-        2. After each guess, the letters in your guess will be colored:
-           - #{GREEN}Green#{RESET}: Correct letter in the correct position.
-           - #{YELLOW}Yellow#{RESET}: Correct letter in the wrong position.
-           - #{RED}Red#{RESET}: Incorrect letter not in the word.
-        3. Use the feedback from your guesses to improve your next guess.
-        4. Good luck!
+        rules = <<~RULES
+        #{BOLD}Wordle Game Rules:#{RESET}
+        1. #{BOLD}You have 6 attempts to guess the correct 5-letter word.#{RESET}
+        2. #{BOLD}After each guess, the letters in your guess will be colored:#{RESET}
+        - #{GREEN}#{BOLD}Green#{RESET}: Correct letter in the correct position.
+        - #{YELLOW}#{BOLD}Yellow#{RESET}: Correct letter in the wrong position.
+        - #{RED}#{BOLD}Red#{RESET}: Incorrect letter not in the word.
+        3. #{BOLD}Use the feedback from your guesses to improve your next guess.#{RESET}
+        4. #{BOLD}Good luck!#{RESET}
         RULES
+
         puts "\n#{rules}"
     end
 
@@ -72,7 +76,7 @@ class Game
 
             update_best_green(user_word) 
             puts "\n#{GREEN}Your best guess so far: #{display(@best_green)} #{RESET}"
-            puts "#{GREEN}Correct letters in the correct position: #{display(@green)}#{RESET}"
+            puts "\n#{GREEN}Correct letters in the correct position: #{display(@green)}#{RESET}"
 
             if @green.compact.length == 5
                 puts "\nCongratulations! You win! You guessed #{BLUE}#{@target}#{RESET}"
@@ -84,10 +88,13 @@ class Game
 
             @turns -= 1
 
-            if @turns == 3
-                puts "\nYou have only three turns left. Do you want a hint (yes/no)?"
+            if @turns <= 3 && @hint_needed
+                puts "\nYou have only #{@turns} turns left. Do you want a hint (yes/no)?"
                 choice = gets.chomp.strip.downcase
-                get_word_definition(@target) if choice == "yes"
+                if choice == "yes"
+                    get_word_definition(@target)
+                    @hint_needed = false
+                end
             end
 
             if @turns > 0
@@ -121,7 +128,7 @@ class Game
         current_green_count = @green.compact.length
         best_green_count = @best_green.compact.length
 
-        if current_green_count > best_green_count
+        if current_green_count >= best_green_count
             @best_green = @green.dup 
         end
     end
