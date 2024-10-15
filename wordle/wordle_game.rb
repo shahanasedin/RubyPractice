@@ -14,14 +14,6 @@ class Game
         @hint_needed = true
     end
 
-    def new_game_state
-        @turns = 6
-        @green = [nil] * 5 # Current correct letters at correct position
-        @best_green = [nil] * 5 # Overall Best Guess
-        @yellow = [] # Correct letters but in the wrong position
-        @red = [] # Wrong letters
-        @target = @words.sample
-    end
     
     def start
         display_rules
@@ -56,6 +48,15 @@ class Game
         RULES
 
         puts "\n#{rules}"
+    end
+
+    def new_game_state
+        @turns = 6
+        @green = [nil] * 5 # Current correct letters at correct position
+        @best_green = [nil] * 5 # Overall Best Guess
+        @yellow = [] # Correct letters but in the wrong position
+        @red = [] # Wrong letters
+        @target = @words.sample
     end
 
     def guess
@@ -105,6 +106,24 @@ class Game
         end
     end
 
+    def check_spelling(word)
+        response = HTTParty.post("https://api.languagetoolplus.com/v2/check", {
+          body: {
+            text: word,
+            language: "en-US"
+          },
+          headers: { 'Content-Type' => 'application/x-www-form-urlencoded' }
+        })
+    
+        if response.success?
+            matches = response.parsed_response["matches"]
+            result = (matches.empty?) ? false : true
+        else
+            puts "Error: #{response.code}"
+            return false
+        end
+    end
+
     def process_guess(user_word)
         @green = [nil] * 5
         current_yellow_letters = []
@@ -132,29 +151,7 @@ class Game
             @best_green = @green.dup 
         end
     end
-
-    def check_spelling(word)
-        response = HTTParty.post("https://api.languagetoolplus.com/v2/check", {
-          body: {
-            text: word,
-            language: "en-US"
-          },
-          headers: { 'Content-Type' => 'application/x-www-form-urlencoded' }
-        })
     
-        if response.success?
-            matches = response.parsed_response["matches"]
-            result = (matches.empty?) ? false : true
-        else
-            puts "Error: #{response.code}"
-            return false
-        end
-    end    
-
-    def display(green)
-        green.map { |ch| ch.nil? ? "_" : ch }.join(" ")
-    end
-
     def get_word_definition(word)
         response = HTTParty.get("https://api.dictionaryapi.dev/api/v2/entries/en/#{word}")
         
@@ -171,6 +168,11 @@ class Game
             puts "Error fetching definitions: #{response.code}."
         end
     end
+
+    def display(green)
+        green.map { |ch| ch.nil? ? "_" : ch }.join(" ")
+    end
+
 end
 
 game1 = Game.new
