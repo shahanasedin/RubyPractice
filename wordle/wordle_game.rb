@@ -12,7 +12,7 @@ class WordleGame
     HINT_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/"
 
     def initialize
-        @word_list = ["apple", "brick", "charm", "clown", "dream", "eagle", "frame", "grape", "heart", "laugh", "maple", "niche", "olive", "peach", "quilt", "robot", "smile", "tiger", "unity", "video", "watch", "zebra", "blaze", "chair", "dance", "equid", "foggy", "ghost", "honey", "ideal", "joint", "knife", "lemon", "merry", "night", "ocean", "plant", "quick", "raini", "shine", "train", "urban", "vouch", "waste", "yield", "ample", "berry", "clean", "drive", "event", "faith", "great", "honor", "image", "jolly", "knock", "learn", "metal", "noble", "other", "power", "quiet", "royal", "stone", "taste", "upper", "visit", "world", "yield", "angel", "boast", "chase", "equal", "fancy", "genre", "happy", "index", "joker", "kites", "lemon", "model", "nicey", "onyx", "place", "quiet", "right", "salsa", "track", "unique", "venue", "write", "x-ray", "yacht", "zesty", "basic", "crisp", "dryly", "eager", "fetch", "grace"]
+        @word_list = ["apple", "brick", "charm", "clown", "dream", "eagle", "frame", "grape", "heart", "laugh", "maple", "niche", "olive", "peach", "quilt", "robot", "smile", "tiger", "unity", "video", "watch", "zebra", "blaze", "chair", "dance", "foggy", "ghost", "honey", "ideal", "joint", "knife", "lemon", "merry", "night", "ocean", "plant", "quick", "shine", "train", "urban", "vouch", "waste", "yield", "ample", "berry", "clean", "drive", "event", "faith", "great", "honor", "image", "jolly", "knock", "learn", "metal", "noble", "other", "power", "quiet", "royal", "stone", "taste", "upper", "visit", "world", "yield", "angel", "boast", "chase", "equal", "fancy", "genre", "happy", "index", "joker", "kites", "lemon", "model", "place", "quiet", "right", "salsa", "track", "venue", "write", "yacht", "zesty", "basic", "crisp", "eager", "fetch", "grace"]
         @user_needs_a_hint = true
     end
 
@@ -88,15 +88,19 @@ class WordleGame
     end
 
     def invalid_word?(word)
-        response = HTTParty.post(SPELL_CHECK_URL, {
-          body: {
-            text: word,
-            language: "en-US"
-          },
-          headers: { 'Content-Type' => 'application/x-www-form-urlencoded' }
-        })
-    
-        response.success? && !response.parsed_response["matches"].empty?
+        begin
+            response = HTTParty.post(SPELL_CHECK_URL, {
+            body: {
+                text: word,
+                language: "en-US"
+            },
+            headers: { 'Content-Type' => 'application/x-www-form-urlencoded' }
+            })
+        
+            response.success? && !response.parsed_response["matches"].empty?
+        rescue SocketError => e
+            puts "#{RED_FONT}Error: Unable to connect to the internet. Please check your connection and try again.#{RESET_FONT_COLOR}"
+        end
     end
 
     def evaluate_user_guess(player_guess)
@@ -107,7 +111,6 @@ class WordleGame
             determine_letter_position(letter, index, current_misplaced_letters)
         end
 
-        # Remove any misplaced letters that have been guessed correctly (green)
         @misplaced_letters -= @correct_positions.compact
         @misplaced_letters.uniq!
         @misplaced_letters.concat(current_misplaced_letters).uniq!
