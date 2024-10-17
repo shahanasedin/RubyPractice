@@ -45,7 +45,6 @@ class WordleGame
             end
             
             display_additional_feedback
-            # handle_hint_request
         end
         puts "\n#{RED_FONT}You lose! The correct word was: #{@target_word}.#{RESET_FONT_COLOR}"
     end
@@ -79,17 +78,6 @@ class WordleGame
         @correct_positions.compact.length == 5
     end
 
-    # def handle_hint_request
-    #     return unless @turns_left <= 3 && @user_needs_a_hint
-
-    #     puts "You have #{@turns_left} turns left. Do you want a hint? (yes/no)"
-    #     want_hint = gets.chomp.strip.downcase
-    #     if want_hint == 'yes'
-    #         get_word_hint(@target_word)
-    #         @user_needs_a_hint = false
-    #     end
-    # end
-
     def user_opts_replay?
         puts "Do you want to play again? (yes/no)"
         gets.chomp.strip.downcase == 'yes'
@@ -116,9 +104,12 @@ class WordleGame
         current_misplaced_letters = []
         
         player_guess.chars.each_with_index do |letter, index|
-            detremine_letter_position(letter, index, current_misplaced_letters)
+            determine_letter_position(letter, index, current_misplaced_letters)
         end
 
+        # Remove any misplaced letters that have been guessed correctly (green)
+        @misplaced_letters -= @correct_positions.compact
+        @misplaced_letters.uniq!
         @misplaced_letters.concat(current_misplaced_letters).uniq!
     end
 
@@ -126,7 +117,7 @@ class WordleGame
         @correct_positions = [nil] * 5
     end
 
-    def detremine_letter_position(letter, index, current_misplaced_letters)
+    def determine_letter_position(letter, index, current_misplaced_letters)
         if @target_word[index] == letter
             @correct_positions[index] = letter
         elsif @target_word.include?(letter)
